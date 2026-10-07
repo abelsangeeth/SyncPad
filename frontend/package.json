@@ -1,0 +1,10 @@
+{
+  "name": "syncpad-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SyncPad browser client — plain ES modules, no build step.",
+  "scripts": {
+    "check": "node --check src/crdt.js && node --check src/session.js && node --check src/editor.js && node --check src/app.js && node --check src/api.js"
+  }
+}

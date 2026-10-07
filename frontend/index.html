@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SyncPad</title>
+    <meta name="description" content="Real-time collaborative document editor built on an RGA CRDT" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>"
+    />
+  </head>
+  <body>
+    <!-- ------------------------------------------------------------ auth -->
+    <section id="view-auth" class="view centered" hidden>
+      <div class="card auth-card">
+        <h1 class="brand">SyncPad</h1>
+        <p class="tagline">
+          Collaborative editing without locks — conflicts resolve by construction.
+        </p>
+
+        <form id="auth-form" data-mode="login" novalidate>
+          <label id="auth-name-field" class="field" hidden>
+            <span>Name</span>
+            <input id="auth-name" type="text" autocomplete="name" />
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input id="auth-email" type="email" autocomplete="email" required />
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input
+              id="auth-password"
+              type="password"
+              autocomplete="current-password"
+              minlength="8"
+              required
+            />
+          </label>
+          <p id="auth-error" class="error" hidden></p>
+          <button id="auth-submit" class="primary" type="submit">Sign in</button>
+        </form>
+
+        <button id="auth-toggle" class="link-button">Need an account? Register</button>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------- library -->
+    <section id="view-library" class="view" hidden>
+      <header class="topbar">
+        <h1 class="brand small">SyncPad</h1>
+        <div class="topbar-right">
+          <span id="library-user" class="muted"></span>
+          <button id="library-sign-out" class="link-button">Sign out</button>
+        </div>
+      </header>
+
+      <main class="library">
+        <form id="new-doc-form" class="new-doc">
+          <input id="new-doc-title" type="text" placeholder="Name a new document…" />
+          <button class="primary" type="submit">Create</button>
+        </form>
+
+        <h2 class="section-title">Your documents</h2>
+        <ul id="library-list" class="doc-list"></ul>
+      </main>
+    </section>
+
+    <!-- ------------------------------------------------------- workspace -->
+    <section id="view-workspace" class="view" hidden>
+      <header class="topbar">
+        <button id="back-to-library" class="icon-button" title="Back to documents">←</button>
+        <input id="doc-title" class="doc-title-input" type="text" aria-label="Document title" />
+        <span id="role-badge" class="chip"></span>
+
+        <div class="topbar-right">
+          <span id="sync-status" class="status" data-status="connecting">Connecting…</span>
+          <div id="peers" class="peers" aria-label="People in this document"></div>
+          <button id="share-open" class="ghost">Share</button>
+          <button id="history-open" class="ghost">History</button>
+          <button id="sign-out" class="link-button">Sign out</button>
+        </div>
+      </header>
+
+      <div id="toolbar" class="toolbar" hidden>
+        <button data-mark="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button data-mark="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button data-mark="code" title="Code (Ctrl+E)"><code>&lt;&gt;</code></button>
+        <button data-mark="strike" title="Strikethrough"><s>S</s></button>
+        <span class="divider"></span>
+        <button data-heading="1" title="Heading 1">H1</button>
+        <button data-heading="2" title="Heading 2">H2</button>
+        <button id="link-button" title="Link">🔗</button>
+        <span class="divider"></span>
+        <button id="comment-add" title="Comment on selection" disabled>💬 Comment</button>
+        <span class="divider"></span>
+        <button data-export="md" title="Export as Markdown">.md</button>
+        <button data-export="html" title="Export as HTML">.html</button>
+        <button data-export="txt" title="Export as plain text">.txt</button>
+      </div>
+
+      <main class="workspace">
+        <div class="paper">
+          <div class="editor-host">
+            <div id="cursor-layer" class="cursor-layer" aria-hidden="true"></div>
+            <div id="editor" class="editor" spellcheck="true"></div>
+          </div>
+          <p id="peer-count" class="muted peer-count"></p>
+        </div>
+
+        <aside class="sidebar">
+          <h2 class="section-title">Comments</h2>
+          <ul id="comment-list" class="comment-list"></ul>
+        </aside>
+      </main>
+
+      <!-- history -->
+      <div id="history-panel" class="panel" hidden>
+        <div class="panel-head">
+          <h2>Version history</h2>
+          <button id="history-close" class="icon-button">×</button>
+        </div>
+        <p class="muted small">
+          Restoring appends new operations — history is never rewritten, so a restore
+          is itself a restorable point.
+        </p>
+        <ul id="history-list" class="revision-list"></ul>
+        <pre id="history-preview" class="preview" hidden></pre>
+      </div>
+
+      <!-- sharing -->
+      <div id="share-panel" class="panel" hidden>
+        <div class="panel-head">
+          <h2>Share</h2>
+          <button id="share-close" class="icon-button">×</button>
+        </div>
+
+        <label class="switch">
+          <input id="share-public" type="checkbox" />
+          <span>Anyone with the link can read</span>
+        </label>
+
+        <div class="panel-row">
+          <select id="share-role" aria-label="Share link role">
+            <option value="viewer">can view</option>
+            <option value="commenter">can comment</option>
+            <option value="editor">can edit</option>
+          </select>
+          <button id="share-create" class="ghost">Create link</button>
+        </div>
+        <input id="share-link" class="share-link" type="text" readonly hidden />
+
+        <h3 class="section-title small">Invite by email</h3>
+        <div class="panel-row">
+          <input id="share-email" type="email" placeholder="person@example.com" />
+          <select id="share-invite-role" aria-label="Collaborator role">
+            <option value="editor">can edit</option>
+            <option value="commenter">can comment</option>
+            <option value="viewer">can view</option>
+          </select>
+          <button id="share-invite" class="ghost">Invite</button>
+        </div>
+
+        <ul id="share-list" class="plain-list"></ul>
+      </div>
+    </section>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>

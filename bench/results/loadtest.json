@@ -1,0 +1,26 @@
+{
+  "clients": 10,
+  "worker_processes": 3,
+  "duration_s": 10.82,
+  "ops_sent": 215,
+  "frames_received": 2188,
+  "latency_samples": 1935,
+  "errors": 0,
+  "throughput_ops_per_s": 19.9,
+  "client_observed_latency_ms": {
+    "min": 10.17,
+    "p50": 30.0,
+    "p90": 48.25,
+    "p95": 55.41,
+    "p99": 82.97,
+    "max": 96.92,
+    "mean": 31.33
+  },
+  "server_observed_fanout": {
+    "observations": 215,
+    "mean_ms": 27.39,
+    "p50_under_ms": 30.0,
+    "p95_under_ms": 60.0,
+    "p99_under_ms": 100.0
+  }
+}

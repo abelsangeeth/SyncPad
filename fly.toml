@@ -1,0 +1,74 @@
+# Fly.io configuration for the SyncPad gateway.
+#
+# Supabase hosts the database; it cannot host this process. SyncPad is a
+# long-lived WebSocket server, and Supabase's only compute product is Edge
+# Functions, which are Deno and short-lived. So the split is:
+#
+#   Supabase  -> Postgres (the operation log, snapshots, users, comments)
+#   Fly.io    -> this container (the stateless WebSocket gateway)
+#
+# Set the app name with `fly apps create <name>`; it must be globally unique.
+app = "syncpad"
+
+# Put compute in the same region as the Supabase project. A cross-region hop
+# is added to *every* operation, because each one is persisted before it is
+# broadcast, so this single line dominates the latency numbers.
+primary_region = "bom"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+# Applied against the real database before a new release serves traffic. If it
+# fails, the release is aborted and the previous version keeps running.
+[deploy]
+  release_command = "alembic upgrade head"
+  strategy = "rolling"
+
+[env]
+  SYNCPAD_ENV = "prod"
+  # Supabase's pooler caps how many client connections a project may hold, and
+  # that budget is shared with every other tool you point at the database.
+  # These are per-machine, so the ceiling is (pool + overflow) x machines.
+  SYNCPAD_DB_POOL_SIZE = "5"
+  SYNCPAD_DB_MAX_OVERFLOW = "5"
+  SYNCPAD_SNAPSHOT_EVERY_OPS = "200"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+
+  # A suspended machine drops every open WebSocket. Clients do reconnect and
+  # resync, but an idle document would disconnect all its viewers, so keep one
+  # machine up rather than paying for that in reconnect storms.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  # NOTE: raising this above 1 requires SYNCPAD_REDIS_URL. Without it each
+  # machine has its own in-process hub, and two clients that land on different
+  # machines will not see each other's edits. Their documents do not converge,
+  # and nothing errors -- see DEPLOY.md.
+  #
+  # Sticky sessions are deliberately NOT configured. The gateway holds no
+  # session state, which is the property Redis fan-out buys.
+
+  [http_service.concurrency]
+    # Connections, not requests: a WebSocket is one connection held for the
+    # whole editing session, so a request-based limit would be meaningless.
+    type = "connections"
+    soft_limit = 200
+    hard_limit = 250
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "4s"
+    grace_period = "20s"
+    method = "GET"
+    # /readyz, not /healthz: it verifies the database round-trips, so a machine
+    # that cannot reach Supabase is pulled out of rotation instead of accepting
+    # sockets it cannot serve.
+    path = "/readyz"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

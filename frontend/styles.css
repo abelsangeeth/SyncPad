@@ -1,0 +1,730 @@
+/* SyncPad — a quiet interface, because the document is the interesting part. */
+
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #1f2430;
+  --ink-soft: #626a7a;
+  --line: #e3e6ec;
+  --accent: #4f46e5;
+  --accent-soft: #eef2ff;
+  --danger: #dc2626;
+  --ok: #059669;
+  --warn: #d97706;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 8px 24px rgb(16 24 40 / 6%);
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #14161b;
+    --surface: #1c1f27;
+    --ink: #e8eaf0;
+    --ink-soft: #9aa3b5;
+    --line: #2b3039;
+    --accent: #818cf8;
+    --accent-soft: #23253a;
+    --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px rgb(0 0 0 / 30%);
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #14161b;
+  --surface: #1c1f27;
+  --ink: #e8eaf0;
+  --ink-soft: #9aa3b5;
+  --line: #2b3039;
+  --accent: #818cf8;
+  --accent-soft: #23253a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.view {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.centered {
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+.small {
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------------ auth */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px;
+}
+
+.auth-card {
+  width: min(420px, 100%);
+}
+
+.brand {
+  margin: 0 0 4px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.brand.small {
+  font-size: 17px;
+}
+
+.tagline {
+  margin: 0 0 24px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.field span {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+input[type='text'],
+input[type='email'],
+input[type='password'],
+select {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.primary {
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary:hover {
+  filter: brightness(1.08);
+}
+
+.ghost {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ghost:hover {
+  background: var(--accent-soft);
+}
+
+.link-button {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.link-button.danger {
+  color: var(--danger);
+}
+
+.icon-button {
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.icon-button:hover {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.error {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+
+/* --------------------------------------------------------------- topbar */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.doc-title-input {
+  width: min(360px, 40vw);
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 15px;
+  background: transparent;
+}
+
+.doc-title-input:hover:not(:disabled) {
+  border-color: var(--line);
+}
+
+.chip {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.status {
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.status[data-status='synced'] {
+  color: var(--ok);
+}
+
+.status[data-status='offline'] {
+  color: var(--warn);
+}
+
+.peers {
+  display: flex;
+}
+
+.avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid var(--surface);
+  margin-left: -6px;
+}
+
+.avatar-sm {
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  margin: 0;
+  border: 0;
+}
+
+/* -------------------------------------------------------------- library */
+
+.library {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: 28px 16px 64px;
+}
+
+.new-doc {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.new-doc .primary {
+  width: auto;
+  padding: 9px 18px;
+}
+
+.section-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  margin: 0 0 10px;
+}
+
+.doc-list,
+.comment-list,
+.revision-list,
+.plain-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-card {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+
+.doc-open {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  padding: 13px 16px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+
+.doc-open:hover {
+  background: var(--accent-soft);
+}
+
+.doc-title {
+  font-weight: 600;
+}
+
+.doc-meta {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* -------------------------------------------------------------- toolbar */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 53px;
+  z-index: 15;
+  flex-wrap: wrap;
+}
+
+.toolbar button {
+  min-width: 32px;
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.toolbar button:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.toolbar button.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--line);
+  margin: 0 5px;
+}
+
+/* ------------------------------------------------------------ workspace */
+
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  padding: 24px 16px 64px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.paper {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 44px;
+  min-height: 60vh;
+}
+
+.editor-host {
+  position: relative;
+}
+
+.editor {
+  outline: none;
+  min-height: 50vh;
+  font-size: 16px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+  caret-color: var(--accent);
+}
+
+.editor[contenteditable='false'] {
+  color: var(--ink-soft);
+}
+
+.editor .sp-h {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.editor .sp-h1 {
+  font-size: 1.7em;
+}
+
+.editor .sp-h2 {
+  font-size: 1.35em;
+}
+
+.editor code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  background: var(--accent-soft);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+
+.editor a {
+  color: var(--accent);
+}
+
+/* Remote cursors float above the text without affecting its layout. */
+.cursor-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.sp-cursor {
+  position: absolute;
+  width: 2px;
+  border-radius: 1px;
+  transition: top 90ms ease, left 90ms ease;
+}
+
+.sp-cursor-label {
+  position: absolute;
+  top: -18px;
+  left: -1px;
+  padding: 1px 6px;
+  border-radius: 4px 4px 4px 0;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.sp-cursor:hover .sp-cursor-label,
+.cursor-layer:hover .sp-cursor-label {
+  opacity: 1;
+}
+
+.peer-count {
+  margin: 24px 0 0;
+  font-size: 12px;
+}
+
+/* -------------------------------------------------------------- sidebar */
+
+.sidebar {
+  position: sticky;
+  top: 100px;
+  align-self: start;
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+}
+
+.comment {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.comment.resolved {
+  opacity: 0.55;
+}
+
+.comment.orphaned {
+  border-style: dashed;
+}
+
+.comment-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 6px;
+}
+
+.comment-author {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.comment-quote {
+  margin: 0 0 6px;
+  padding-left: 9px;
+  border-left: 2px solid var(--accent);
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.comment.orphaned .comment-quote {
+  border-left-color: var(--warn);
+  text-decoration: line-through;
+}
+
+.comment-body {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 6px;
+  font-size: 13px;
+}
+
+/* --------------------------------------------------------------- panels */
+
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100%);
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 40;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.panel-row {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+.panel-row select {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.panel-row input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+.switch input {
+  width: auto;
+}
+
+.share-link {
+  font-family: var(--mono);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.revision {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.revision-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.revision-actions {
+  display: flex;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.preview {
+  margin-top: 14px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+  max-height: 40vh;
+  overflow: auto;
+}
+
+/* --------------------------------------------------------------- toasts */
+
+.toasts {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  z-index: 100;
+}
+
+.toast {
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+
+.toast-error {
+  background: var(--danger);
+  color: #fff;
+}
+
+.toast-warn {
+  background: var(--warn);
+  color: #fff;
+}
+
+.toast-out {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+/* ------------------------------------------------------------ responsive */
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .paper {
+    padding: 24px 20px;
+  }
+
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+
+  .doc-title-input {
+    width: 100%;
+  }
+}
